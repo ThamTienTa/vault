@@ -1,53 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Private Notes Box</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vault</title>
 
 <style>
     body{
-        font-family: Arial, sans-serif;
-        background:#111827;
+        margin:0;
+        font-family:Arial, sans-serif;
+        background:#0f172a;
         color:white;
         display:flex;
         justify-content:center;
-        align-items:center;
-        min-height:100vh;
-        margin:0;
+        padding:20px;
     }
 
     .container{
-        width:90%;
-        max-width:700px;
-        background:#1f2937;
-        padding:20px;
-        border-radius:15px;
-        box-shadow:0 0 20px rgba(0,0,0,0.4);
+        width:100%;
+        max-width:800px;
     }
 
     h1{
         text-align:center;
+        font-size:40px;
+        margin-bottom:20px;
     }
 
-    textarea{
-        width:100%;
-        height:180px;
-        border:none;
-        border-radius:10px;
-        padding:10px;
-        resize:none;
-        font-size:16px;
-        margin-top:10px;
+    .card{
+        background:#1e293b;
+        padding:20px;
+        border-radius:15px;
+        margin-bottom:20px;
+        box-shadow:0 0 15px rgba(0,0,0,0.3);
     }
 
-    input{
+    input, textarea{
         width:100%;
+        box-sizing:border-box;
         padding:12px;
         border:none;
         border-radius:10px;
         margin-top:10px;
         font-size:16px;
+    }
+
+    textarea{
+        min-height:150px;
+        resize:vertical;
     }
 
     button{
@@ -56,26 +56,26 @@
         margin-top:10px;
         border:none;
         border-radius:10px;
-        background:#3b82f6;
+        background:#2563eb;
         color:white;
         font-size:16px;
         cursor:pointer;
     }
 
     button:hover{
-        background:#2563eb;
+        background:#1d4ed8;
     }
 
-    .savedBox{
+    .vaultItem{
         background:#111827;
         padding:15px;
-        border-radius:10px;
-        margin-top:15px;
-        border:1px solid #374151;
+        border-radius:12px;
+        margin-top:10px;
+        border:1px solid #334155;
     }
 
-    .time{
-        color:#9ca3af;
+    .date{
+        color:#94a3b8;
         font-size:14px;
         margin-bottom:10px;
     }
@@ -89,72 +89,109 @@
 
 <div class="container">
 
-    <h1>🔒 Private Notes</h1>
+    <h1>🔒 Vault</h1>
 
-    <div id="setupArea">
-        <input type="password" id="setPassword" placeholder="Set your password">
-        <textarea id="noteInput" placeholder="Write your secret information here..."></textarea>
-        <button onclick="saveNote()">Save Note</button>
+    <div class="card">
+
+        <input type="password" id="password" placeholder="Set Password">
+
+        <textarea id="noteInput" placeholder="Write your secret info here..."></textarea>
+
+        <button onclick="saveVault()">Save To Vault</button>
+
     </div>
 
-    <div id="openArea" class="hidden">
-        <input type="password" id="enterPassword" placeholder="Enter password">
-        <button onclick="openNote()">Open Saved Note</button>
+    <div class="card">
+
+        <input type="password" id="openPassword" placeholder="Enter Password">
+
+        <button onclick="openVault()">Open Vault</button>
+
     </div>
 
-    <div id="displayArea"></div>
+    <div id="vaultContainer"></div>
 
 </div>
 
 <script>
 
-if(localStorage.getItem("savedPassword")){
-    document.getElementById("setupArea").classList.add("hidden");
-    document.getElementById("openArea").classList.remove("hidden");
+let vaultData = JSON.parse(localStorage.getItem("vaultData")) || [];
+
+function getTodayDate(){
+    const today = new Date();
+
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+
+    return `${day}/${month}/${year}`;
 }
 
-function saveNote(){
+function saveVault(){
 
-    const password = document.getElementById("setPassword").value;
+    const password = document.getElementById("password").value;
     const note = document.getElementById("noteInput").value;
 
     if(password === "" || note === ""){
-        alert("Please fill everything.");
+        alert("Fill everything.");
         return;
     }
 
-    const currentTime = new Date().toLocaleString();
+    const vaultItem = {
+        password: password,
+        note: note,
+        date: getTodayDate(),
+        time: new Date().toLocaleTimeString()
+    };
 
-    localStorage.setItem("savedPassword", password);
-    localStorage.setItem("savedNote", note);
-    localStorage.setItem("savedTime", currentTime);
+    vaultData.push(vaultItem);
 
-    alert("Note saved successfully!");
+    localStorage.setItem("vaultData", JSON.stringify(vaultData));
 
-    document.getElementById("setupArea").classList.add("hidden");
-    document.getElementById("openArea").classList.remove("hidden");
+    document.getElementById("noteInput").value = "";
+
+    alert("Saved to Vault!");
 }
 
-function openNote(){
+function openVault(){
 
-    const enteredPassword = document.getElementById("enterPassword").value;
-    const savedPassword = localStorage.getItem("savedPassword");
+    const enteredPassword = document.getElementById("openPassword").value;
 
-    if(enteredPassword === savedPassword){
+    const container = document.getElementById("vaultContainer");
 
-        const note = localStorage.getItem("savedNote");
-        const time = localStorage.getItem("savedTime");
+    container.innerHTML = "";
 
-        document.getElementById("displayArea").innerHTML = `
-            <div class="savedBox">
-                <div class="time">Saved on: ${time}</div>
-                <div>${note}</div>
+    let found = false;
+
+    vaultData.forEach(item => {
+
+        if(item.password === enteredPassword){
+
+            found = true;
+
+            container.innerHTML += `
+                <div class="vaultItem">
+                    <div class="date">
+                        📅 ${item.date} | ⏰ ${item.time}
+                    </div>
+
+                    <div>
+                        ${item.note}
+                    </div>
+                </div>
+            `;
+        }
+
+    });
+
+    if(!found){
+        container.innerHTML = `
+            <div class="vaultItem">
+                Wrong password or no vault found.
             </div>
         `;
-
-    } else {
-        alert("Wrong password!");
     }
+
 }
 
 </script>
