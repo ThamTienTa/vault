@@ -23,7 +23,7 @@
 
     h1{
         text-align:center;
-        font-size:40px;
+        font-size:42px;
         margin-bottom:20px;
     }
 
@@ -56,21 +56,41 @@
         margin-top:10px;
         border:none;
         border-radius:10px;
-        background:#2563eb;
         color:white;
         font-size:16px;
         cursor:pointer;
     }
 
-    button:hover{
+    .saveBtn{
+        background:#2563eb;
+    }
+
+    .saveBtn:hover{
         background:#1d4ed8;
+    }
+
+    .openBtn{
+        background:#059669;
+    }
+
+    .openBtn:hover{
+        background:#047857;
+    }
+
+    .deleteBtn{
+        background:#dc2626;
+        margin-top:15px;
+    }
+
+    .deleteBtn:hover{
+        background:#b91c1c;
     }
 
     .vaultItem{
         background:#111827;
         padding:15px;
         border-radius:12px;
-        margin-top:10px;
+        margin-top:15px;
         border:1px solid #334155;
     }
 
@@ -80,8 +100,9 @@
         margin-bottom:10px;
     }
 
-    .hidden{
-        display:none;
+    .note{
+        white-space:pre-wrap;
+        line-height:1.5;
     }
 </style>
 </head>
@@ -95,9 +116,11 @@
 
         <input type="password" id="password" placeholder="Set Password">
 
-        <textarea id="noteInput" placeholder="Write your secret info here..."></textarea>
+        <textarea id="noteInput" placeholder="Write your secret information here..."></textarea>
 
-        <button onclick="saveVault()">Save To Vault</button>
+        <button class="saveBtn" onclick="saveVault()">
+            Save To Vault
+        </button>
 
     </div>
 
@@ -105,7 +128,9 @@
 
         <input type="password" id="openPassword" placeholder="Enter Password">
 
-        <button onclick="openVault()">Open Vault</button>
+        <button class="openBtn" onclick="openVault()">
+            Open Vault
+        </button>
 
     </div>
 
@@ -118,6 +143,7 @@
 let vaultData = JSON.parse(localStorage.getItem("vaultData")) || [];
 
 function getTodayDate(){
+
     const today = new Date();
 
     const day = today.getDate();
@@ -138,6 +164,7 @@ function saveVault(){
     }
 
     const vaultItem = {
+        id: Date.now(),
         password: password,
         note: note,
         date: getTodayDate(),
@@ -171,13 +198,22 @@ function openVault(){
 
             container.innerHTML += `
                 <div class="vaultItem">
+
                     <div class="date">
                         📅 ${item.date} | ⏰ ${item.time}
                     </div>
 
-                    <div>
+                    <div class="note">
                         ${item.note}
                     </div>
+
+                    <button 
+                        class="deleteBtn"
+                        onclick="deleteVault(${item.id})"
+                    >
+                        Delete
+                    </button>
+
                 </div>
             `;
         }
@@ -185,13 +221,26 @@ function openVault(){
     });
 
     if(!found){
+
         container.innerHTML = `
             <div class="vaultItem">
                 Wrong password or no vault found.
             </div>
         `;
     }
+}
 
+function deleteVault(id){
+
+    const confirmDelete = confirm("Delete this vault note?");
+
+    if(!confirmDelete) return;
+
+    vaultData = vaultData.filter(item => item.id !== id);
+
+    localStorage.setItem("vaultData", JSON.stringify(vaultData));
+
+    openVault();
 }
 
 </script>
